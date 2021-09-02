@@ -3,6 +3,7 @@ const roleCtrl = {};
 const boom = require('boom');
 const roleSchema = require('./role.schema');
 const { isValidObjectId } = require('../../helpers');
+const RolesEnum = require('./role.enum');
 
 roleCtrl.getAllRoles = async (_request, _reply) => {
     try {
@@ -38,8 +39,12 @@ roleCtrl.getRole = async (_request, _reply) => {
 };
 
 roleCtrl.addRole = async (_request, _reply) => {
+    const { name, description } = _request.body;
+    name.toUpperCase();
+    const existRole = await getRoleByName(name, _reply);
+    if (existRole) return _reply.code(401).send({ msg: 'IThis user already exists' });
     try {
-        const role = new roleSchema(_request.body);
+        const role = new roleSchema({ name, description });
         await role.save();
         _reply.code(201).send({
             result: role
@@ -84,4 +89,31 @@ roleCtrl.deleteRole = async (_request, _reply) => {
     }
 };
 
-module.exports = roleCtrl;
+const getRoleByName = async (roleName, _reply) => {
+    try {
+        const role = await roleSchema.findOne({ name: roleName });
+        return role
+    } catch (error) {
+        return _reply.code(500).send({
+            msg: 'Internal server error'
+        });
+    }
+}
+
+const createRolesInit = async () => {
+    try {
+        const count = await roleSchema.estimatedDocumentCount();
+
+        if (count > 0) return;
+
+        const values = await Promise.all([
+            new roleSchema({ name: RolesEnum.ADMINISTRATOR, description: 'Role created to manage the entire system' }).save(),
+            new roleSchema({ name: RolesEnum.REGISTER, description: 'Role created to use the system' }).save()
+        ]);
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+
+module.exports = { roleCtrl, createRolesInit, getRoleByName };

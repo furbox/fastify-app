@@ -1,6 +1,6 @@
 'use strict';
 
-const roleCtrl = require('../../modules/role/role.ctrl');
+const { roleCtrl } = require('../../modules/role/role.ctrl');
 
 module.exports = async function (fastify, opts) {
     fastify.get('/', roleCtrl.getAllRoles);

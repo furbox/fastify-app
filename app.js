@@ -3,6 +3,7 @@
 const path = require('path');
 const AutoLoad = require('fastify-autoload');
 const mongoose = require('mongoose');
+const { createRolesInit } = require('./modules/role/role.ctrl');
 
 try {
   mongoose.connect(process.env.MONGODB_CNN, {
@@ -32,4 +33,6 @@ module.exports = async function (fastify, opts) {
     dir: path.join(__dirname, 'routes'),
     options: Object.assign({}, opts)
   })
+
+  createRolesInit();
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-const userCtrl = require('../../modules/user/user.ctrl');
+const { userCtrl } = require('../../modules/user/user.ctrl');
 
 module.exports = async function (fastify, opts) {
     fastify.get('/:id', userCtrl.getUserById);
