@@ -1,6 +1,5 @@
 'use strict';
 const roleCtrl = {};
-const boom = require('boom');
 const roleSchema = require('./role.schema');
 const { isValidObjectId } = require('../../helpers');
 const RolesEnum = require('./role.enum');

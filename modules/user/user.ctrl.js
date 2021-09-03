@@ -104,7 +104,7 @@ const getUserById = async (id, _reply) => {
 
         if (!user) {
             return _reply.code(401).send({
-                msg: 'This user already exists'
+                msg: 'User does not exist'
             });
         }
         return user;
@@ -128,7 +128,7 @@ const getUserByCode = async (code, _reply) => {
 
 const getUserByEmail = async (email, _reply) => {
     try {
-        const user = await userSchema.findOne({ email });
+        const user = await userSchema.findOne({ email }).populate('role');
         return user;
     } catch (error) {
         return _reply.code(500).send({
