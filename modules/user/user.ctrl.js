@@ -117,7 +117,7 @@ const getUserById = async (id, _reply) => {
 
 const getUserByCode = async (code, _reply) => {
     try {
-        const user = await userSchema.findOne({ codevalidate: code });
+        const user = await userSchema.findOne({ codevalidate: code, activationcode: false });
         return user;
     } catch (error) {
         return _reply.code(500).send({
@@ -128,7 +128,7 @@ const getUserByCode = async (code, _reply) => {
 
 const getUserByEmail = async (email, _reply) => {
     try {
-        const user = await userSchema.findOne({ email }).populate('role');
+        const user = await userSchema.findOne({ email, status: true }).populate('role');
         return user;
     } catch (error) {
         return _reply.code(500).send({

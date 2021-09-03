@@ -24,7 +24,7 @@ roleCtrl.getRole = async (_request, _reply) => {
         const role = await roleSchema.findById(id, { status: true });
         if (!role) {
             return _reply.code(401).send({
-                msg: 'IThis user already exists'
+                msg: 'This role already exists'
             });
         }
         _reply.send({
@@ -41,7 +41,7 @@ roleCtrl.addRole = async (_request, _reply) => {
     const { name, description } = _request.body;
     name.toUpperCase();
     const existRole = await getRoleByName(name, _reply);
-    if (existRole) return _reply.code(401).send({ msg: 'IThis user already exists' });
+    if (existRole) return _reply.code(401).send({ msg: 'This role already exists' });
     try {
         const role = new roleSchema({ name, description });
         await role.save();

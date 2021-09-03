@@ -84,9 +84,8 @@ authCtrl.verifyAccount = async (_request, _reply) => {
     const code = _request.params.code;
     try {
         const user = await getUserByCode(code, _reply);
-        if (!user) return _reply.code(401).send({ msg: 'User does not exist' });
+        if (!user) return _reply.code(401).send({ msg: 'User does not exist or this account is actived' });
         if (user.status) return _reply.code(401).send({ msg: 'The account is already active' });
-        if (user.activationcode) return _reply.code(401).send({ msg: 'The account is already active' });
         user.activationcode = true;
         user.status = true;
         await upUser(user, _reply);
