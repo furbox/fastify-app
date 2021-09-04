@@ -3,9 +3,9 @@
 const { permissionCtrl } = require('../../modules/permission/permission.ctrl');
 
 module.exports = async function (fastify, opts) {
-    fastify.get('/', permissionCtrl.getAllPersmissions);
-    fastify.post('/', permissionCtrl.addPersmission);
-    fastify.get('/:id', permissionCtrl.getPersmission);
-    fastify.put('/:id', permissionCtrl.updatePersmission);
-    fastify.delete('/:id', permissionCtrl.deletePersmission);
+    fastify.get('/', { preValidation: [fastify.authenticate] }, permissionCtrl.getAllPermissions);
+    fastify.post('/', { preValidation: [fastify.authenticate] }, permissionCtrl.addPermission);
+    fastify.get('/:id', { preValidation: [fastify.authenticate] }, permissionCtrl.getPermission);
+    fastify.put('/:id', { preValidation: [fastify.authenticate] }, permissionCtrl.updatePermission);
+    fastify.delete('/:id', { preValidation: [fastify.authenticate] }, permissionCtrl.deletePermission);
 }

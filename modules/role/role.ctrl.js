@@ -6,7 +6,10 @@ const RolesEnum = require('./role.enum');
 
 roleCtrl.getAllRoles = async (_request, _reply) => {
     try {
-        const allRoles = await roleSchema.find({ status: true });
+        const allRoles = await roleSchema.find({ status: true }).populate({
+            'path': 'permissions',
+            'select': 'name namekey'
+        });
         _reply.send({
             result: allRoles
         });
@@ -21,10 +24,14 @@ roleCtrl.getRole = async (_request, _reply) => {
     try {
         const id = _request.params.id;
         isValidObjectId(id, _reply);
-        const role = await roleSchema.findById(id, { status: true });
+        const role = await roleSchema.findOne({ id, status: true }).populate({
+            'path': 'permissions',
+            'select': 'name namekey'
+        });
+
         if (!role) {
             return _reply.code(401).send({
-                msg: 'This role already exists'
+                msg: 'This role does not exists'
             });
         }
         _reply.send({
@@ -38,12 +45,12 @@ roleCtrl.getRole = async (_request, _reply) => {
 };
 
 roleCtrl.addRole = async (_request, _reply) => {
-    const { name, description } = _request.body;
+    const { name, description, permissions } = _request.body;
     name.toUpperCase();
     const existRole = await getRoleByName(name, _reply);
     if (existRole) return _reply.code(401).send({ msg: 'This role already exists' });
     try {
-        const role = new roleSchema({ name, description });
+        const role = new roleSchema({ name, description, permissions });
         await role.save();
         _reply.code(201).send({
             result: role

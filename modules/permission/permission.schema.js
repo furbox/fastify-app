@@ -7,6 +7,7 @@ const permissionSchema = new mongoose.Schema({
     namekey: { type: String, unique: true, required: [true, 'Permission Key Is Required'] },
     description: { type: String, required: [true, 'Permission Description Is Required'] },
     status: { type: Boolean, default: true, required: [true, 'Permission Status Is Required'] },
+    module: { type: mongoose.Schema.Types.ObjectId, required: [true, 'Permission Module Is Required'], ref: 'Module' },
 }, {
     versionKey: false,
     timestamps: true

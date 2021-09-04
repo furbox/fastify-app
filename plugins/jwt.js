@@ -1,6 +1,7 @@
 'use strict'
 
 const fp = require('fastify-plugin')
+const { getUserById } = require('../modules/user/user.ctrl')
 
 /**
  * This plugins adds some utilities to handle http errors
@@ -25,6 +26,8 @@ module.exports = fp(async function (fastify, opts) {
 
   fastify.decorate("authenticate", async function (request, reply) {
     try {
+      const info = await request.jwtVerify();
+      await getUserById(info.user.user_id, reply);
       await request.jwtVerify()
     } catch (err) {
       reply.send(err)

@@ -5,6 +5,8 @@ const AutoLoad = require('fastify-autoload');
 const mongoose = require('mongoose');
 const { createRolesInit } = require('./modules/role/role.ctrl');
 const Fastify = require('fastify');
+const { createModulesInit } = require('./modules/module/module.ctrl');
+const { createPermissionsInit } = require('./modules/permission/permission.ctrl');
 
 const fastify = Fastify({
   logger: {
@@ -40,6 +42,8 @@ module.exports = async function (fastify, opts) {
     options: Object.assign({}, opts)
   })
 
-  createRolesInit();
+  await createModulesInit();
+  await createPermissionsInit();
+  await createRolesInit();
   fastify.listen(5000);
 }

@@ -30,9 +30,19 @@ userCtrl.getAllUsers = async (_request, _reply) => {
             userSchema.find({ status })
                 .skip(Number(page))
                 .limit(Number(limit))
-                .populate('role')
+                .populate({
+                    'path': 'role',
+                    'select': 'name',
+                    'populate': {
+                        'path': 'permissions',
+                        'select': 'name namekey',
+                        'populate': {
+                            'path': 'module',
+                            'select': 'name'
+                        }
+                    }
+                })
         ]);
-
         _reply.send({
             result: {
                 total,
@@ -100,7 +110,18 @@ userCtrl.deleteUser = async (_request, _reply) => {
 const getUserById = async (id, _reply) => {
     await isValidObjectId(id, _reply);
     try {
-        const user = await userSchema.findById(id, 'fullName email img role').populate('role');
+        const user = await userSchema.findById(id, 'fullName email img role status').populate({
+            'path': 'role',
+            'select': 'name',
+            'populate': {
+                'path': 'permissions',
+                'select': 'name namekey',
+                'populate': {
+                    'path': 'module',
+                    'select': 'name'
+                }
+            }
+        });
 
         if (!user) {
             return _reply.code(401).send({
@@ -128,7 +149,18 @@ const getUserByCode = async (code, _reply) => {
 
 const getUserByEmail = async (email, _reply) => {
     try {
-        const user = await userSchema.findOne({ email, status: true }).populate('role');
+        const user = await userSchema.findOne({ email, status: true }).populate({
+            'path': 'role',
+            'select': 'name',
+            'populate': {
+                'path': 'permissions',
+                'select': 'name namekey',
+                'populate': {
+                    'path': 'module',
+                    'select': 'name'
+                }
+            }
+        });
         return user;
     } catch (error) {
         return _reply.code(500).send({
