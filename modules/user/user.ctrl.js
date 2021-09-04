@@ -7,6 +7,7 @@ const { isValidObjectId } = require('../../helpers');
 const _ = require('underscore');
 const { getRoleByName } = require('../role/role.ctrl');
 const RolesEnum = require('../role/role.enum');
+const roleSchema = require('../role/role.schema');
 
 userCtrl.getUserById = async (_request, _reply) => {
     const id = _request.params.id;
@@ -210,4 +211,22 @@ const upUser = async (user, _reply) => {
     }
 }
 
-module.exports = { userCtrl, createUser, getUserByEmail, getUserById, getUserByCode, upUser };
+
+const createUserInit = async () => {
+    try {
+        const count = await userSchema.estimatedDocumentCount();
+
+        if (count > 0) return;
+
+        const admin = await roleSchema.findOne({name:RolesEnum.ADMINISTRATOR});
+
+        const values = await Promise.all([
+            new userSchema({ fullName: 'admin@admin.com', email: 'admin@admin.com', password: 'Admin123', role: admin._id }).save()
+        ]);
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+
+module.exports = { userCtrl, createUser, getUserByEmail, getUserById, getUserByCode, upUser, createUserInit };

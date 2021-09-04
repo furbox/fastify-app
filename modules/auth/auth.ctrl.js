@@ -154,10 +154,9 @@ const generarToken = async (user, _reply) => {
         const payload = {
             user: {
                 user_id: user._id,
-                role: {
-                    role_id: user.role._id,
-                    name: user.role.name
-                }
+                user_name: user.fullName,
+                user_email: user.email,
+                user_role: user.role.name
             },
         }
         await upUser(user);

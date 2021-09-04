@@ -7,6 +7,7 @@ const { createRolesInit } = require('./modules/role/role.ctrl');
 const Fastify = require('fastify');
 const { createModulesInit } = require('./modules/module/module.ctrl');
 const { createPermissionsInit } = require('./modules/permission/permission.ctrl');
+const { createUserInit } = require('./modules/user/user.ctrl');
 
 const fastify = Fastify({
   logger: {
@@ -45,5 +46,6 @@ module.exports = async function (fastify, opts) {
   await createModulesInit();
   await createPermissionsInit();
   await createRolesInit();
+  await createUserInit();
   fastify.listen(5000);
 }

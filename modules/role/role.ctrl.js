@@ -44,6 +44,27 @@ roleCtrl.getRole = async (_request, _reply) => {
     }
 };
 
+roleCtrl.getRoleByName = async (_request, _reply) => {
+    try {
+        const name = _request.params.name;
+        name.toUpperCase();
+        const role = await getRoleByName(name, _reply);
+
+        if (!role) {
+            return _reply.code(401).send({
+                msg: 'This role does not exists'
+            });
+        }
+        _reply.send({
+            result: role
+        });
+    } catch (error) {
+        return _reply.code(500).send({
+            msg: 'Internal server error'
+        });
+    }
+};
+
 roleCtrl.addRole = async (_request, _reply) => {
     const { name, description, permissions } = _request.body;
     name.toUpperCase();
@@ -97,7 +118,10 @@ roleCtrl.deleteRole = async (_request, _reply) => {
 
 const getRoleByName = async (roleName, _reply) => {
     try {
-        const role = await roleSchema.findOne({ name: roleName });
+        const role = await roleSchema.findOne({ name: roleName }).populate({
+            'path': 'permissions',
+            'select': 'name namekey'
+        });
         return role
     } catch (error) {
         return _reply.code(500).send({

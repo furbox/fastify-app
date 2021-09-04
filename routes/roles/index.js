@@ -8,4 +8,5 @@ module.exports = async function (fastify, opts) {
     fastify.get('/:id', { preValidation: [fastify.authenticate] }, roleCtrl.getRole);
     fastify.put('/:id', { preValidation: [fastify.authenticate] }, roleCtrl.updateRole);
     fastify.delete('/:id', { preValidation: [fastify.authenticate] }, roleCtrl.deleteRole);
+    fastify.get('/name/:name', { preValidation: [fastify.authenticate] }, roleCtrl.getRoleByName);
 }
