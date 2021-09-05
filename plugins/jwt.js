@@ -1,6 +1,7 @@
 'use strict'
 
 const fp = require('fastify-plugin')
+const { getRoleByName } = require('../modules/role/role.ctrl')
 const { getUserById } = require('../modules/user/user.ctrl')
 
 /**
@@ -36,7 +37,14 @@ module.exports = fp(async function (fastify, opts) {
 
   fastify.decorate("authPermission", (perms) => async function (request, reply) {
     try {
-      console.log(perms)
+      const dataUser = await request.jwtVerify();
+      const role = await getRoleByName(dataUser.user.user_role);
+      const { permissions } = role;
+      const authorize = permissions.find(perm => perm.namekey === perms);
+      if (!authorize) {
+        return reply.code(401).send({ msg: 'Unauthorized Exception' })
+      }
+      return authorize;
       // const permissionList = typeof perms === 'string' ? perms.split(',').map(current => current.trim()) : perms;
       // const authorize = request.user.roles.some(current => permissionList.includes(current.name));
       // if (!authorize) {

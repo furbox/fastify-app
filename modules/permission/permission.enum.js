@@ -87,6 +87,11 @@ const PermissionsEnum = {
             namekey: 'deleteRole',
             description: 'This permission deleted a role'
         },
+        getRoleByName: {
+            name: 'GET A ROLE BY NAME',
+            namekey: 'getRoleByName',
+            description: 'This permission find one role by name'
+        },
     },
     USER: {
         getUserById: {

@@ -23,7 +23,7 @@ permissionCtrl.getPermission = async (_request, _reply) => {
     try {
         const id = _request.params.id;
         isValidObjectId(id, _reply);
-        const permission = await permissionSchema.findOne({ id, status: true }).populate('module');
+        const permission = await permissionSchema.findOne({ _id: id, status: true }).populate('module');
         if (!permission) {
             return _reply.code(401).send({
                 msg: 'This permission dont exists'
@@ -42,6 +42,7 @@ permissionCtrl.getPermission = async (_request, _reply) => {
 permissionCtrl.addPermission = async (_request, _reply) => {
     const { name, namekey, description, module } = _request.body;
     const existModule = await getModuleById(module, _reply);
+    if (!existModule) return _reply.code(401).send({ msg: 'This permission does not exists' });
     const existPermission = await getPermissionByName(namekey, _reply);
     if (existPermission) return _reply.code(401).send({ msg: 'This permission already exists' });
     try {

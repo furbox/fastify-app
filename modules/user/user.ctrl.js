@@ -218,10 +218,11 @@ const createUserInit = async () => {
 
         if (count > 0) return;
 
-        const admin = await roleSchema.findOne({name:RolesEnum.ADMINISTRATOR});
+        const admin = await roleSchema.findOne({ name: RolesEnum.ADMINISTRATOR });
 
+        const salt = bcrypt.genSaltSync();
         const values = await Promise.all([
-            new userSchema({ fullName: 'admin@admin.com', email: 'admin@admin.com', password: 'Admin123', role: admin._id }).save()
+            new userSchema({ fullName: 'admin@admin.com', email: 'admin@admin.com', password: bcrypt.hashSync('Admin123', salt), role: admin._id, status:true }).save()
         ]);
     } catch (error) {
         console.error(error);
