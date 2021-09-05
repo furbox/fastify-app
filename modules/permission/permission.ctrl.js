@@ -101,6 +101,11 @@ const getPermissionByName = async (permissionNameKey, _reply) => {
     }
 }
 
+const getPermissionByModuleId = async (moduleId) => {
+    const permissions = await permissionSchema.find({ module: moduleId });
+    return permissions
+}
+
 const createPermissionsInit = async () => {
     try {
         const count = await permissionSchema.estimatedDocumentCount();
@@ -247,4 +252,4 @@ const createPermissionsInit = async () => {
 };
 
 
-module.exports = { permissionCtrl, createPermissionsInit };
+module.exports = { permissionCtrl, createPermissionsInit, getPermissionByModuleId };

@@ -3,6 +3,9 @@ const roleCtrl = {};
 const roleSchema = require('./role.schema');
 const { isValidObjectId } = require('../../helpers');
 const RolesEnum = require('./role.enum');
+const { getModuleByName } = require('../module/module.ctrl');
+const { getPermissionByModuleId } = require('../permission/permission.ctrl');
+const ModulesEnum = require('../module/module.enum');
 
 roleCtrl.getAllRoles = async (_request, _reply) => {
     try {
@@ -136,9 +139,38 @@ const createRolesInit = async () => {
 
         if (count > 0) return;
 
+        const auth = await getModuleByName(ModulesEnum.AUTH.name);
+        const permission = await getModuleByName(ModulesEnum.PERMISSIONS.name);
+        const role = await getModuleByName(ModulesEnum.ROLES.name);
+        const xmodule = await getModuleByName(ModulesEnum.MODULES.name);
+        const user = await getModuleByName(ModulesEnum.USERS.name);
+
+        const permissionAuth = await getPermissionByModuleId(auth._id);
+        const allPermissionAuth = permissionAuth.map(permauth => permauth._id);
+
+        const permissionPerm = await getPermissionByModuleId(permission._id);
+        const allPermissionPerm = permissionPerm.map(perm => perm._id);
+
+        const permissionRole = await getPermissionByModuleId(role._id);
+        const allPermissionRole = permissionRole.map(permrole => permrole._id);
+
+        const permissionXmod = await getPermissionByModuleId(xmodule._id);
+        const allPermissionXmod = permissionXmod.map(permxmod => permxmod._id);
+
+        const permissionUser = await getPermissionByModuleId(user._id);
+        const allPermissionUser = permissionUser.map(permuser => permuser._id);
+
+        const allpermissions = [
+            ...allPermissionPerm,
+            ...allPermissionAuth,
+            ...allPermissionRole,
+            ...allPermissionXmod,
+            ...allPermissionUser
+        ];
+
         const values = await Promise.all([
-            new roleSchema({ name: RolesEnum.ADMINISTRATOR, description: 'Role created to manage the entire system' }).save(),
-            new roleSchema({ name: RolesEnum.REGISTER, description: 'Role created to use the system' }).save()
+            new roleSchema({ name: RolesEnum.ADMINISTRATOR, permissions: allpermissions, description: 'Role created to manage the entire system' }).save(),
+            new roleSchema({ name: RolesEnum.REGISTER, permissions: permissionAuth, description: 'Role created to use the system' }).save()
         ]);
     } catch (error) {
         console.error(error);
