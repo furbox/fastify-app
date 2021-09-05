@@ -217,6 +217,12 @@ const createPermissionsInit = async () => {
                 module: role._id
             }).save(),
             new permissionSchema({
+                name: PermissionsEnum.ROLE.getRoleByName.name,
+                namekey: PermissionsEnum.ROLE.getRoleByName.namekey,
+                description: PermissionsEnum.ROLE.getRoleByName.description,
+                module: role._id
+            }).save(),
+            new permissionSchema({
                 name: PermissionsEnum.USER.getUserById.name,
                 namekey: PermissionsEnum.USER.getUserById.namekey,
                 description: PermissionsEnum.USER.getUserById.description,

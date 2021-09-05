@@ -8,6 +8,7 @@ const Fastify = require('fastify');
 const { createModulesInit } = require('./modules/module/module.ctrl');
 const { createPermissionsInit } = require('./modules/permission/permission.ctrl');
 const { createUserInit } = require('./modules/user/user.ctrl');
+const { format } = require('./helpers/response');
 
 const fastify = Fastify({
   logger: {
@@ -42,6 +43,15 @@ module.exports = async function (fastify, opts) {
     dir: path.join(__dirname, 'routes'),
     options: Object.assign({ prefix: '/api/v1' }, opts)
   })
+
+  fastify.setErrorHandler((error, request, reply) => {
+    if (error.validation && error.validation.length > 0) {
+      const path = error.validation[0].dataPath;
+      const field = path.charAt(1).toUpperCase() + path.slice(2);
+      const message = `${field} ${error.validation[0].message}`;
+      reply.status(422).send(format(request, reply, message));
+    }
+  });
 
   await createModulesInit();
   await createPermissionsInit();

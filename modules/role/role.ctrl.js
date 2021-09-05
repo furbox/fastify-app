@@ -6,6 +6,9 @@ const RolesEnum = require('./role.enum');
 const { getModuleByName } = require('../module/module.ctrl');
 const { getPermissionByModuleId } = require('../permission/permission.ctrl');
 const ModulesEnum = require('../module/module.enum');
+const RoleValidation = require('./role.validation');
+const _ = require('underscore');
+const { send } = require('../../helpers/response');
 
 roleCtrl.getAllRoles = async (_request, _reply) => {
     try {
@@ -13,19 +16,19 @@ roleCtrl.getAllRoles = async (_request, _reply) => {
             'path': 'permissions',
             'select': 'name namekey'
         });
-        _reply.send({
-            result: allRoles
-        });
+        return send(_request, _reply, 'ok', 200, allRoles);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
 roleCtrl.getRole = async (_request, _reply) => {
     try {
         const id = _request.params.id;
+        const { error } = RoleValidation.validateId(id);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
         isValidObjectId(id, _reply);
         const role = await roleSchema.findOne({ id, status: true }).populate({
             'path': 'permissions',
@@ -33,17 +36,11 @@ roleCtrl.getRole = async (_request, _reply) => {
         });
 
         if (!role) {
-            return _reply.code(401).send({
-                msg: 'This role does not exists'
-            });
+            return send(_request, _reply, 'This role does not exists', 401);
         }
-        _reply.send({
-            result: role
-        });
+        return send(_request, _reply, 'ok', 200, role);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
@@ -51,85 +48,86 @@ roleCtrl.getRoleByName = async (_request, _reply) => {
     try {
         const name = _request.params.name;
         name.toUpperCase();
-        const role = await getRoleByName(name, _reply);
+        const role = await getRoleByName(name, _request, _reply);
 
         if (!role) {
-            return _reply.code(401).send({
-                msg: 'This role does not exists'
-            });
+            return send(_request, _reply, 'This role does not exists', 401);
         }
-        _reply.send({
-            result: role
-        });
+        return send(_request, _reply, 'User fetched successfully', 200, role);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        return send(_request, _reply, 'Unable to get user', 500);
     }
 };
 
 roleCtrl.addRole = async (_request, _reply) => {
-    const { name, description, permissions } = _request.body;
-    name.toUpperCase();
-    const existRole = await getRoleByName(name, _reply);
-    if (existRole) return _reply.code(401).send({ msg: 'This role already exists' });
     try {
-        const role = new roleSchema({ name, description, permissions });
+        const body = _.pick(_request.body, ['name', 'description', 'permissions']);
+        const { error } = RoleValidation.validateRole(body.name, body.description);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
+        body.name.toUpperCase();
+        const existRole = await getRoleByName(body.name, _request, _reply);
+        if (existRole) return send(_request, _reply, 'This role already exists', 401);
+        const role = new roleSchema({ name: body.name, description: body.description, permissions: body.permissions });
         await role.save();
-        _reply.code(201).send({
-            result: role
-        });
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+
+        return send(_request, _reply, 'ok', 201, role);
+    } catch (err) {
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
 roleCtrl.updateRole = async (_request, _reply) => {
+    const id = _request.params.id;
+    const { error } = RoleValidation.validateId(id);
+
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
+    const body = _.pick(_request.body, ['name', 'description', 'permissions']);
     try {
-        const id = _request.params.id;
         isValidObjectId(id, _reply);
-        const roleUpdate = await roleSchema.findByIdAndUpdate(id, _request.body, {
+        const roleUpdate = await roleSchema.findByIdAndUpdate(id, body, {
             new: true
         });
-        _reply.send({
-            result: roleUpdate
-        });
+        return send(_request, _reply, 'ok', 200, roleUpdate);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
 roleCtrl.deleteRole = async (_request, _reply) => {
     try {
         const id = _request.params.id;
+        const { error } = RoleValidation.validateId(id);
+
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
         isValidObjectId(id, _reply);
         const eliminaLogica = { status: false };
         const roleDelete = await roleSchema.findByIdAndUpdate(id, eliminaLogica, { new: true });
-        _reply.send({
-            result: roleDelete
-        });
+        
+        return send(_request, _reply, 'ok', 200, roleDelete);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
-const getRoleByName = async (roleName, _reply) => {
+const getRoleByName = async (roleName, _request, _reply) => {
     try {
+        const { error } = RoleValidation.validateName(roleName);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
         const role = await roleSchema.findOne({ name: roleName }).populate({
             'path': 'permissions',
             'select': 'name namekey'
         });
         return role
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
