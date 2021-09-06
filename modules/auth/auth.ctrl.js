@@ -3,34 +3,40 @@ const { createUser, getUserByEmail, upUser, getUserByCode, getUserById } = requi
 const authSchema = require('./auth.schema');
 const _ = require('underscore');
 const bcrypt = require('bcryptjs');
+const { send } = require('../../helpers/response');
+const { validateSignin, validateSignup, validatePasswordChange, validateCode } = require('./auth.validation');
 
 authCtrl.signin = async (_request, _reply) => {
     const body = _.pick(_request.body, ['email', 'password']);
     try {
-        const user = await getUserByEmail(body.email, _reply);
-        if (!user) return _reply.code(401).send({ msg: 'User does not exist' });
+        const { error } = validateSignin(body.email, body.password);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
+        const user = await getUserByEmail(body.email, _request, _reply);
+        if (!user) return send(_request, _reply, 'User does not exist', 401);
         user.countlogin++;
         if (!bcrypt.compareSync(body.password, user.password)) {
-            return _reply.code(401).send({
-                msg: 'Invalid data'
-            });
+            return send(_request, _reply, 'Invalid data', 401);
         }
-        const token = await generarToken(user, _reply);
-        await addTokenUser(token, user._id, _reply);
-        _reply.send({ token });
+        const token = await generarToken(user, _request, _reply);
+        await addTokenUser(token, user._id, _request, _reply);
+        return send(_request, _reply, 'ok', 200, token);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal Server Error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
 authCtrl.signup = async (_request, _reply) => {
     const user = _.pick(_request.body, ['fullName', 'email', 'password']);
-    const userExist = await getUserByEmail(user.email, _reply);
-    if (userExist) return _reply.code(401).send({ msg: 'This user already exists' });
+    const { error } = validateSignup(body.fullName, body.email, body.password);
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
+    const userExist = await getUserByEmail(user.email, _request, _reply);
+    if (userExist) return send(_request, _reply, 'This user already exists', 401);
     try {
-        const newUser = await createUser(user, _reply);
+        const newUser = await createUser(user, _request, _reply);
 
         //TODO: envios de emails
         // sendMail({
@@ -38,22 +44,20 @@ authCtrl.signup = async (_request, _reply) => {
         //     subject: 'Verificación de Email',
         //     html: '<h1>Verifica tu email:</h1><br><a href="http://' + req.get('Host') + '/api/v1/auth/verify-account/' + user.codevalidate + '">Link</a>'
         // });
-
-        _reply.code(201).send({
-            msg: 'Email sent with a code for verification.'
-        });
+        return send(_request, _reply, 'Email sent with a code for verification.', 201);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal Server Error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
 authCtrl.changePassword = async (_request, _reply) => {
     const body = _.pick(_request.body, ['email']);
-
     try {
-        const user = await getUserByEmail(body.email, _reply);
+        const { error } = validatePasswordChange(body.email);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
+        const user = await getUserByEmail(body.email, _request, _reply);
         const data = new Date();
         const salt = bcrypt.genSaltSync();
         const buff = new Buffer.from(data.toISOString());
@@ -69,41 +73,35 @@ authCtrl.changePassword = async (_request, _reply) => {
         //     subject: 'Verificación de Email',
         //     html: '<p>Nueva Contraseña: ' + newPass + '</p><br><p>Recomendamos Cambiarla.</p>'
         // });
-
-        _reply.code(201).send({
-            msg: 'We have sent your new password to your email'
-        });
+        return send(_request, _reply, 'We have sent your new password to your email', 201);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal Server Error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
 authCtrl.verifyAccount = async (_request, _reply) => {
-    const code = _request.params.code;
+    const body = _.pick(_request.body, ['email']);
     try {
-        const user = await getUserByCode(code, _reply);
-        if (!user) return _reply.code(401).send({ msg: 'User does not exist or this account is actived' });
-        if (user.status) return _reply.code(401).send({ msg: 'The account is already active' });
+        const { error } = validateCode(body.code);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
+        const user = await getUserByCode(body.code, _request, _reply);
+        if (!user) return send(_request, _reply, 'User does not exist or this account is actived', 401);
+        if (user.status) return send(_request, _reply, 'The account is already active', 401);
         user.activationcode = true;
         user.status = true;
         await upUser(user, _reply);
-        _reply.code(201).send({
-            msg: 'We have activated your account. You can login'
-        });
+        return send(_request, _reply, 'We have activated your account. You can login', 200);
     } catch (error) {
-        console.log(error);
-        return _reply.code(500).send({
-            msg: 'Internal Server Error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
 authCtrl.refreshToken = async (_request, _reply) => {
     const { authorization } = _request.headers;
     if (!authorization) {
-        throw new Error('missing authorization in headers');
+        return send(_request, _reply, 'missing authorization in headers', 401);
     }
     //obtener el token actual
     const actualToken = authorization.split(' ')[1];
@@ -117,18 +115,16 @@ authCtrl.refreshToken = async (_request, _reply) => {
         const token = await generarToken(userDB, _reply);
 
         await addTokenUser(token, userDB._id, _reply);
-        _reply.code(201).send({
+        return send(_request, _reply, 'ok', 201, {
             token: token,
             expiresIn: process.env.CADUCIDAD_TOKEN
         });
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal Server Error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
-const addTokenUser = async (token, userid, _reply) => {
+const addTokenUser = async (token, userid, _request, _reply) => {
     try {
         const tokenExist = await authSchema.findOne({ user: userid });
         if (!tokenExist) {
@@ -143,13 +139,11 @@ const addTokenUser = async (token, userid, _reply) => {
         }
         return true;
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal Server Error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
-const generarToken = async (user, _reply) => {
+const generarToken = async (user, _request, _reply) => {
     try {
         const payload = {
             user: {
@@ -166,9 +160,7 @@ const generarToken = async (user, _reply) => {
         });
         return token;
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal Server Error'
-        });
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
