@@ -1,16 +1,17 @@
 const authCtrl = {};
-const { createUser, getUserByEmail, upUser, getUserByCode, getUserById } = require('../user/user.ctrl');
-const authSchema = require('./auth.schema');
 const _ = require('underscore');
 const bcrypt = require('bcryptjs');
-const { send } = require('../../helpers/response');
+const authSchema = require('./auth.schema');
+const { createUser, getUserByEmail, upUser, getUserByCode, getUserById } = require('../user/user.ctrl');
 const { validateSignin, validateSignup, validatePasswordChange, validateCode } = require('./auth.validation');
+const { send } = require('../../helpers/response');
 
 authCtrl.signin = async (_request, _reply) => {
     const body = _.pick(_request.body, ['email', 'password']);
     try {
         const { error } = validateSignin(body.email, body.password);
         if (error) {
+            _request.log.error(error);
             return send(_request, _reply, error.details, 401);
         }
         const user = await getUserByEmail(body.email, _request, _reply);
@@ -22,20 +23,22 @@ authCtrl.signin = async (_request, _reply) => {
         const token = await generarToken(user, _request, _reply);
         await addTokenUser(token, user._id, _request, _reply);
         return send(_request, _reply, 'ok', 200, token);
-    } catch (error) {
+    } catch (err) {
+        _request.log.error('[ERROR_SIGNIN]: ', err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
 authCtrl.signup = async (_request, _reply) => {
-    const user = _.pick(_request.body, ['fullName', 'email', 'password']);
-    const { error } = validateSignup(body.fullName, body.email, body.password);
-    if (error) {
-        return send(_request, _reply, error.details, 401);
-    }
-    const userExist = await getUserByEmail(user.email, _request, _reply);
-    if (userExist) return send(_request, _reply, 'This user already exists', 401);
     try {
+        const user = _.pick(_request.body, ['fullName', 'email', 'password']);
+        const { error } = validateSignup(user.fullName, user.email, user.password);
+        if (error) {
+            _request.log.error(error);
+            return send(_request, _reply, error.details, 401);
+        }
+        const userExist = await getUserByEmail(user.email, _request, _reply);
+        if (userExist) return send(_request, _reply, 'This user already exists', 401);
         const newUser = await createUser(user, _request, _reply);
 
         //TODO: envios de emails
@@ -45,7 +48,8 @@ authCtrl.signup = async (_request, _reply) => {
         //     html: '<h1>Verifica tu email:</h1><br><a href="http://' + req.get('Host') + '/api/v1/auth/verify-account/' + user.codevalidate + '">Link</a>'
         // });
         return send(_request, _reply, 'Email sent with a code for verification.', 201);
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }
@@ -74,7 +78,8 @@ authCtrl.changePassword = async (_request, _reply) => {
         //     html: '<p>Nueva Contraseña: ' + newPass + '</p><br><p>Recomendamos Cambiarla.</p>'
         // });
         return send(_request, _reply, 'We have sent your new password to your email', 201);
-    } catch (error) {
+    } catch (err) {
+        _request.log.error('[ERROR_CHANGE_PASSWORD]: ', err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }
@@ -93,7 +98,8 @@ authCtrl.verifyAccount = async (_request, _reply) => {
         user.status = true;
         await upUser(user, _reply);
         return send(_request, _reply, 'We have activated your account. You can login', 200);
-    } catch (error) {
+    } catch (err) {
+        _request.log.error('[ERROR_AUTH]:', err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }

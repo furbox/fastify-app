@@ -8,6 +8,7 @@ const _ = require('underscore');
 const { getRoleByName } = require('../role/role.ctrl');
 const RolesEnum = require('../role/role.enum');
 const roleSchema = require('../role/role.schema');
+const { send } = require('../../helpers/response');
 
 userCtrl.getUserById = async (_request, _reply) => {
     const id = _request.params.id;
@@ -64,7 +65,7 @@ userCtrl.addUser = async (_request, _reply) => {
 
     try {
         //guardar el usuario en mongo
-        const newUser = await createUser(user, _reply);
+        const newUser = await createUser(user, _request, _reply);
         _reply.code(201).send({
             result: newUser
         });
@@ -170,7 +171,7 @@ const getUserByEmail = async (email, _reply) => {
     }
 }
 
-const createUser = async (addUser, _reply) => {
+const createUser = async (addUser, _request, _reply) => {
     let role;
     try {
         if (!addUser.role) {
