@@ -22,7 +22,7 @@ permissionCtrl.getAllPermissions = async (_request, _reply) => {
 permissionCtrl.getPermission = async (_request, _reply) => {
     try {
         const id = _request.params.id;
-        isValidObjectId(id, _reply);
+        isValidObjectId(id, _request, _reply);
         const permission = await permissionSchema.findOne({ _id: id, status: true }).populate('module');
         if (!permission) {
             return _reply.code(401).send({
@@ -61,7 +61,7 @@ permissionCtrl.addPermission = async (_request, _reply) => {
 permissionCtrl.updatePermission = async (_request, _reply) => {
     try {
         const id = _request.params.id;
-        isValidObjectId(id, _reply);
+        isValidObjectId(id, _request, _reply);
         const permissionUpdate = await permissionSchema.findByIdAndUpdate(id, _request.body, {
             new: true
         });
@@ -78,7 +78,7 @@ permissionCtrl.updatePermission = async (_request, _reply) => {
 permissionCtrl.deletePermission = async (_request, _reply) => {
     try {
         const id = _request.params.id;
-        await isValidObjectId(id, _reply);
+        await isValidObjectId(id, _request, _reply);
         const eliminaLogica = { status: false };
         const permissionDelete = await permissionSchema.findByIdAndUpdate(id, eliminaLogica, { new: true });
         _reply.send({

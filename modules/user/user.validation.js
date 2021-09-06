@@ -3,7 +3,7 @@ const Joi = require('joi');
 /**
  * @exports
  * @method validateId
- * @param { id }
+ * @param  id 
  * @summary validate id
  * @returns
  */
@@ -21,74 +21,15 @@ function validateId(id) {
 
 /**
  * @exports
- * @method validateCode
- * @param { code }
- * @summary validate code
+ * @method validateUserCreate
+ * @param fullName 
+ * @param email 
+ * @param password 
+ * @param status 
+ * @summary validate fullName, email, password, role, status
  * @returns
  */
-function validateCode(code) {
-    return Joi.object({
-        code: Joi
-            .string()
-            .required(),
-    })
-        .validate({
-            code,
-        },
-            { allowUnknown: true });
-}
-
-/**
- * @exports
- * @method validatePasswordChange
- * @param { email }
- * @summary validate email
- * @returns
- */
-function validatePasswordChange(email) {
-    return Joi.object({
-        email: Joi
-            .string()
-            .email()
-            .required(),
-    })
-        .validate({
-            email,
-        },
-            { allowUnknown: true });
-}
-
-/**
- * @exports
- * @method validateSignin
- * @param { email }
- * @param { password }
- * @summary validate email password
- * @returns
- */
-function validateSignin(email, password) {
-    return Joi.object({
-        email: Joi
-            .string()
-            .email()
-            .required(),
-        password: Joi
-            .string()
-            .required(),
-    })
-        .validate({ email, password }, { allowUnknown: true });
-}
-
-/**
- * @exports
- * @method validateSignup
- * @param { fullName }
- * @param { email }
- * @param { password }
- * @summary validate fullName, email, password
- * @returns
- */
-function validateSignup(fullName, email, password) {
+function validateUserCreate(fullName, email, password, role, status) {
     return Joi.object({
         fullName: Joi
             .string()
@@ -99,22 +40,46 @@ function validateSignup(fullName, email, password) {
             .required(),
         password: Joi
             .string()
-            // .pattern(/^(?=.{8,16})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s)(?!.*[\\\\\'"]).*$/)
-            .pattern(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/)
-            // .pattern(/(?=^.{8,}$)(?=.\d)(?=.\W+)(?![.\n])(?=.[A-Z])(?=.[a-z]).*$/)
             .required()
-            .messages({ 'string.pattern.base': 'Required: 8 character minimum, min one Upper-case letter, min one Lower-case letter, min one digit, min one special character' })
+            .pattern(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/)
+            .messages({ 'string.pattern.base': 'Required: 8 character minimum, min one Upper-case letter, min one Lower-case letter, min one digit, min one special character' }),
+        role: Joi
+            .string(),
+        status: Joi
+            .boolean(),
     })
         .validate({
-            fullName, email, password
+            fullName, email, password, role, status,
+        },
+            { allowUnknown: true });
+}
+
+/**
+ * @exports
+ * @method validatePagination
+ * @param  limit
+ * @param  page
+ * @param  status
+ * @summary validate limit page status
+ * @returns
+ */
+function validatePagination(limit, page, status) {
+    return Joi.object({
+        limit: Joi
+            .number(),
+        page: Joi
+            .number(),
+        status: Joi
+            .boolean(),
+    })
+        .validate({
+            limit, page, status,
         },
             { allowUnknown: true });
 }
 
 module.exports = {
     validateId,
-    validateSignup,
-    validateSignin,
-    validatePasswordChange,
-    validateCode
+    validateUserCreate,
+    validatePagination
 };

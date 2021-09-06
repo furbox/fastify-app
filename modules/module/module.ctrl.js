@@ -21,7 +21,7 @@ moduleCtrl.getAllModules = async (_request, _reply) => {
 moduleCtrl.getModule = async (_request, _reply) => {
     try {
         const id = _request.params.id;
-        isValidObjectId(id, _reply);
+        isValidObjectId(id, _request, _reply);
         const module = await moduleSchema.findOne({ id, status: true });
         if (!module) {
             return _reply.code(401).send({
@@ -59,7 +59,7 @@ moduleCtrl.addModule = async (_request, _reply) => {
 moduleCtrl.updateModule = async (_request, _reply) => {
     try {
         const id = _request.params.id;
-        isValidObjectId(id, _reply);
+        isValidObjectId(id, _request, _reply);
         const moduleUpdate = await moduleSchema.findByIdAndUpdate(id, _request.body, {
             new: true
         });
@@ -76,7 +76,7 @@ moduleCtrl.updateModule = async (_request, _reply) => {
 moduleCtrl.deleteModule = async (_request, _reply) => {
     try {
         const id = _request.params.id;
-        isValidObjectId(id, _reply);
+        isValidObjectId(id, _request, _reply);
         const eliminaLogica = { status: false };
         const moduleDelete = await moduleSchema.findByIdAndUpdate(id, eliminaLogica, { new: true });
         _reply.send({
@@ -101,7 +101,7 @@ const getModuleByName = async (moduleName, _reply) => {
 };
 
 const getModuleById = async (id, _reply) => {
-    await isValidObjectId(id, _reply);
+    await isValidObjectId(id, _request, _reply);
     try {
         const module = await moduleSchema.findById(id);
 

@@ -11,7 +11,6 @@ authCtrl.signin = async (_request, _reply) => {
     try {
         const { error } = validateSignin(body.email, body.password);
         if (error) {
-            _request.log.error(error);
             return send(_request, _reply, error.details, 401);
         }
         const user = await getUserByEmail(body.email, _request, _reply);
@@ -24,7 +23,7 @@ authCtrl.signin = async (_request, _reply) => {
         await addTokenUser(token, user._id, _request, _reply);
         return send(_request, _reply, 'ok', 200, token);
     } catch (err) {
-        _request.log.error('[ERROR_SIGNIN]: ', err);
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }
@@ -34,7 +33,6 @@ authCtrl.signup = async (_request, _reply) => {
         const user = _.pick(_request.body, ['fullName', 'email', 'password']);
         const { error } = validateSignup(user.fullName, user.email, user.password);
         if (error) {
-            _request.log.error(error);
             return send(_request, _reply, error.details, 401);
         }
         const userExist = await getUserByEmail(user.email, _request, _reply);
@@ -79,7 +77,7 @@ authCtrl.changePassword = async (_request, _reply) => {
         // });
         return send(_request, _reply, 'We have sent your new password to your email', 201);
     } catch (err) {
-        _request.log.error('[ERROR_CHANGE_PASSWORD]: ', err);
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }
@@ -99,7 +97,7 @@ authCtrl.verifyAccount = async (_request, _reply) => {
         await upUser(user, _reply);
         return send(_request, _reply, 'We have activated your account. You can login', 200);
     } catch (err) {
-        _request.log.error('[ERROR_AUTH]:', err);
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }
@@ -107,6 +105,7 @@ authCtrl.verifyAccount = async (_request, _reply) => {
 authCtrl.refreshToken = async (_request, _reply) => {
     const { authorization } = _request.headers;
     if (!authorization) {
+        _request.log.error(authorization);
         return send(_request, _reply, 'missing authorization in headers', 401);
     }
     //obtener el token actual
@@ -125,7 +124,8 @@ authCtrl.refreshToken = async (_request, _reply) => {
             token: token,
             expiresIn: process.env.CADUCIDAD_TOKEN
         });
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }
@@ -144,7 +144,8 @@ const addTokenUser = async (token, userid, _request, _reply) => {
             await tokenExist.save();
         }
         return true;
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }
@@ -165,7 +166,8 @@ const generarToken = async (user, _request, _reply) => {
             expiresIn: process.env.CADUCIDAD_TOKEN
         });
         return token;
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }

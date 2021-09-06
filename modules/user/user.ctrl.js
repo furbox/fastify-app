@@ -9,23 +9,29 @@ const { getRoleByName } = require('../role/role.ctrl');
 const RolesEnum = require('../role/role.enum');
 const roleSchema = require('../role/role.schema');
 const { send } = require('../../helpers/response');
+const { validateId, validateUserCreate, validatePagination } = require('./user.validation');
 
 userCtrl.getUserById = async (_request, _reply) => {
     const id = _request.params.id;
+    const { error } = validateId(id);
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
     try {
-        const user = await getUserById(id, _reply);
-        _reply.send({
-            result: user
-        });
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        const user = await getUserById(id, _request, _reply);
+        return send(_request, _reply, 'ok', 200, user);
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
 userCtrl.getAllUsers = async (_request, _reply) => {
     const { limit = 5, page = 0, status = true } = _request.query;
+    const { error } = validatePagination(limit, page, status);
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
     try {
         const [total, users] = await Promise.all([
             userSchema.countDocuments({ status }),
@@ -45,72 +51,72 @@ userCtrl.getAllUsers = async (_request, _reply) => {
                     }
                 })
         ]);
-        _reply.send({
-            result: {
-                total,
-                users
-            }
+        return send(_request, _reply, 'ok', 200, {
+            total,
+            users
         });
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
 userCtrl.addUser = async (_request, _reply) => {
     const user = _.pick(_request.body, ['fullName', 'email', 'password', 'role', 'status']);
-    const userExist = await getUserByEmail(user.email, _reply);
-    if (userExist) return _reply.code(401).send({ msg: 'This user already exists' });
-
+    const { error } = validateUserCreate(user.fullName, user.email, user.password, user.role, user.status);
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
+    const userExist = await getUserByEmail(user.email, _request, _reply);
+    if (userExist) return send(_request, _reply, 'This user already exists', 401);
     try {
         //guardar el usuario en mongo
         const newUser = await createUser(user, _request, _reply);
-        _reply.code(201).send({
-            result: newUser
-        });
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        return send(_request, _reply, 'ok', 201, newUser);
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
 
 userCtrl.updateUser = async (_request, _reply) => {
     const id = _request.params.id;
-    await isValidObjectId(id, _reply);
-    const body = _.pick(_request.body, ['fullName', 'email', 'img', 'password', 'role', 'status', 'birthday']);
+    await isValidObjectId(id, _request, _reply);
+    const body = _.pick(_request.body, ['fullName', 'email', 'password', 'role', 'status']);
+    const { error } = validateUserCreate(body.fullName, body.email, body.password, body.role, body.status);
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
     try {
         const user = await userSchema.findByIdAndUpdate(id, body, { new: true });
-        _reply.code(201).send({
-            result: user
-        });
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        return send(_request, _reply, 'ok', 201, user);
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
 userCtrl.deleteUser = async (_request, _reply) => {
     const id = _request.params.id;
-    await isValidObjectId(id, _reply);
+    const { error } = validateId(id);
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
+    await isValidObjectId(id, _request, _reply);
     const eliminaLogica = { status: false };
+    const user = await getUserById(id);
     try {
-        const user = await userSchema.findByIdAndUpdate(id, eliminaLogica, { new: true });
-        _reply.code(201).send({
-            result: user
-        });
-    } catch (error) {
-        return _reply.status(500).json({
-            msg: 'Internal server error'
-        });
+        const userDelete = await userSchema.findByIdAndUpdate(user.id, eliminaLogica, { new: true });
+        return send(_request, _reply, 'ok', 200, userDelete);
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
-const getUserById = async (id, _reply) => {
-    await isValidObjectId(id, _reply);
+const getUserById = async (id, _request, _reply) => {
+    await isValidObjectId(id, _request, _reply);
     try {
         const user = await userSchema.findById(id, 'fullName email img role status').populate({
             'path': 'role',
@@ -126,30 +132,26 @@ const getUserById = async (id, _reply) => {
         });
 
         if (!user) {
-            return _reply.code(401).send({
-                msg: 'User does not exist'
-            });
+            return send(_request, _reply, 'User does not exist', 401);
         }
         return user;
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
-const getUserByCode = async (code, _reply) => {
+const getUserByCode = async (code, _request, _reply) => {
     try {
         const user = await userSchema.findOne({ codevalidate: code, activationcode: false });
         return user;
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
-const getUserByEmail = async (email, _reply) => {
+const getUserByEmail = async (email, _request, _reply) => {
     try {
         const user = await userSchema.findOne({ email, status: true }).populate({
             'path': 'role',
@@ -164,10 +166,9 @@ const getUserByEmail = async (email, _reply) => {
             }
         });
         return user;
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
@@ -175,7 +176,7 @@ const createUser = async (addUser, _request, _reply) => {
     let role;
     try {
         if (!addUser.role) {
-            const defaultRole = await getRoleByName(RolesEnum.REGISTER, _reply);
+            const defaultRole = await getRoleByName(RolesEnum.REGISTER, _request, _reply);
             role = defaultRole._id;
         } else {
             role = addUser.role;
@@ -194,21 +195,19 @@ const createUser = async (addUser, _request, _reply) => {
         const user = new userSchema(newUser);
         await user.save();
         return user;
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
-const upUser = async (user, _reply) => {
+const upUser = async (user, _request, _reply) => {
     try {
         await user.save();
         return true;
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 
@@ -223,7 +222,7 @@ const createUserInit = async () => {
 
         const salt = bcrypt.genSaltSync();
         const values = await Promise.all([
-            new userSchema({ fullName: 'admin@admin.com', email: 'admin@admin.com', password: bcrypt.hashSync('Admin123', salt), role: admin._id, status:true }).save()
+            new userSchema({ fullName: 'admin@admin.com', email: 'admin@admin.com', password: bcrypt.hashSync('Admin123', salt), role: admin._id, status: true }).save()
         ]);
     } catch (error) {
         console.error(error);

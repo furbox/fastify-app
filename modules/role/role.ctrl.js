@@ -17,7 +17,8 @@ roleCtrl.getAllRoles = async (_request, _reply) => {
             'select': 'name namekey'
         });
         return send(_request, _reply, 'ok', 200, allRoles);
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 };
@@ -29,7 +30,7 @@ roleCtrl.getRole = async (_request, _reply) => {
         if (error) {
             return send(_request, _reply, error.details, 401);
         }
-        isValidObjectId(id, _reply);
+        isValidObjectId(id, _request, _reply);
         const role = await roleSchema.findOne({ id, status: true }).populate({
             'path': 'permissions',
             'select': 'name namekey'
@@ -39,7 +40,8 @@ roleCtrl.getRole = async (_request, _reply) => {
             return send(_request, _reply, 'This role does not exists', 401);
         }
         return send(_request, _reply, 'ok', 200, role);
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 };
@@ -54,7 +56,8 @@ roleCtrl.getRoleByName = async (_request, _reply) => {
             return send(_request, _reply, 'This role does not exists', 401);
         }
         return send(_request, _reply, 'User fetched successfully', 200, role);
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Unable to get user', 500);
     }
 };
@@ -74,6 +77,7 @@ roleCtrl.addRole = async (_request, _reply) => {
 
         return send(_request, _reply, 'ok', 201, role);
     } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 };
@@ -87,12 +91,13 @@ roleCtrl.updateRole = async (_request, _reply) => {
     }
     const body = _.pick(_request.body, ['name', 'description', 'permissions']);
     try {
-        isValidObjectId(id, _reply);
+        isValidObjectId(id, _request, _reply);
         const roleUpdate = await roleSchema.findByIdAndUpdate(id, body, {
             new: true
         });
         return send(_request, _reply, 'ok', 200, roleUpdate);
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 };
@@ -105,12 +110,13 @@ roleCtrl.deleteRole = async (_request, _reply) => {
         if (error) {
             return send(_request, _reply, error.details, 401);
         }
-        isValidObjectId(id, _reply);
+        isValidObjectId(id, _request, _reply);
         const eliminaLogica = { status: false };
         const roleDelete = await roleSchema.findByIdAndUpdate(id, eliminaLogica, { new: true });
         
         return send(_request, _reply, 'ok', 200, roleDelete);
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 };
@@ -126,7 +132,8 @@ const getRoleByName = async (roleName, _request, _reply) => {
             'select': 'name namekey'
         });
         return role
-    } catch (error) {
+    } catch (err) {
+        _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
 }
