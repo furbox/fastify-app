@@ -52,7 +52,7 @@ permissionCtrl.getPermission = async (_request, _reply) => {
             return send(_request, _reply, 'This permission dont exists', 401);
         }
         return send(_request, _reply, 'ok', 200, permission);
-    } catch (error) {
+    } catch (err) {
         _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
@@ -72,7 +72,7 @@ permissionCtrl.addPermission = async (_request, _reply) => {
         const permission = new permissionSchema(body);
         await permission.save();
         return send(_request, _reply, 'ok', 201, permission);
-    } catch (error) {
+    } catch (err) {
         _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
@@ -93,7 +93,7 @@ permissionCtrl.updatePermission = async (_request, _reply) => {
         }
         const permissionUpdate = await permissionSchema.findByIdAndUpdate(id, body, { new: true });
         return send(_request, _reply, 'ok', 200, permissionUpdate);
-    } catch (error) {
+    } catch (err) {
         _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
@@ -110,7 +110,7 @@ permissionCtrl.deletePermission = async (_request, _reply) => {
         const eliminaLogica = { status: false };
         const permissionDelete = await permissionSchema.findByIdAndUpdate(id, eliminaLogica, { new: true });
         return send(_request, _reply, 'ok', 200, permissionDelete);
-    } catch (error) {
+    } catch (err) {
         _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }
@@ -120,7 +120,7 @@ const getPermissionByName = async (permissionNameKey, _request, _reply) => {
     try {
         const permission = await permissionSchema.findOne({ namekey: permissionNameKey });
         return permission
-    } catch (error) {
+    } catch (err) {
         _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
     }

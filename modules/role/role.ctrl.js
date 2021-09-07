@@ -46,7 +46,7 @@ roleCtrl.getRole = async (_request, _reply) => {
             return send(_request, _reply, error.details, 401);
         }
         isValidObjectId(id, _request, _reply);
-        const role = await roleSchema.findOne({ id, status: true }).populate({
+        const role = await roleSchema.findOne({ _id: id, status: true }).populate({
             'path': 'permissions',
             'select': 'name namekey'
         });
