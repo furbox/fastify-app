@@ -9,14 +9,29 @@ const ModulesEnum = require('../module/module.enum');
 const RoleValidation = require('./role.validation');
 const _ = require('underscore');
 const { send } = require('../../helpers/response');
+const { validatePagination, validateId } = require('../../helpers/validations');
 
 roleCtrl.getAllRoles = async (_request, _reply) => {
+    const { limit = 5, page = 0, status = true } = _request.query;
+    const { error } = validatePagination(limit, page, status);
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
     try {
-        const allRoles = await roleSchema.find({ status: true }).populate({
-            'path': 'permissions',
-            'select': 'name namekey'
+        const [total, roles] = await Promise.all([
+            roleSchema.countDocuments({ status }),
+            roleSchema.find({ status })
+                .skip(Number(page))
+                .limit(Number(limit))
+                .populate({
+                    'path': 'permissions',
+                    'select': 'name namekey'
+                })
+        ]);
+        return send(_request, _reply, 'ok', 200, {
+            total,
+            roles
         });
-        return send(_request, _reply, 'ok', 200, allRoles);
     } catch (err) {
         _request.log.error(err);
         return send(_request, _reply, 'Internal server error', 500);
@@ -26,7 +41,7 @@ roleCtrl.getAllRoles = async (_request, _reply) => {
 roleCtrl.getRole = async (_request, _reply) => {
     try {
         const id = _request.params.id;
-        const { error } = RoleValidation.validateId(id);
+        const { error } = validateId(id);
         if (error) {
             return send(_request, _reply, error.details, 401);
         }
@@ -84,8 +99,7 @@ roleCtrl.addRole = async (_request, _reply) => {
 
 roleCtrl.updateRole = async (_request, _reply) => {
     const id = _request.params.id;
-    const { error } = RoleValidation.validateId(id);
-
+    const { error } = validateId(id);
     if (error) {
         return send(_request, _reply, error.details, 401);
     }
@@ -105,15 +119,14 @@ roleCtrl.updateRole = async (_request, _reply) => {
 roleCtrl.deleteRole = async (_request, _reply) => {
     try {
         const id = _request.params.id;
-        const { error } = RoleValidation.validateId(id);
-
+        const { error } = validateId(id);
         if (error) {
             return send(_request, _reply, error.details, 401);
         }
         isValidObjectId(id, _request, _reply);
         const eliminaLogica = { status: false };
         const roleDelete = await roleSchema.findByIdAndUpdate(id, eliminaLogica, { new: true });
-        
+
         return send(_request, _reply, 'ok', 200, roleDelete);
     } catch (err) {
         _request.log.error(err);
@@ -138,7 +151,7 @@ const getRoleByName = async (roleName, _request, _reply) => {
     }
 }
 
-const createRolesInit = async () => {
+const createRolesInit = async (_fastify) => {
     try {
         const count = await roleSchema.estimatedDocumentCount();
 
@@ -173,12 +186,13 @@ const createRolesInit = async () => {
             ...allPermissionUser
         ];
 
-        const values = await Promise.all([
+        await Promise.all([
             new roleSchema({ name: RolesEnum.ADMINISTRATOR, permissions: allpermissions, description: 'Role created to manage the entire system' }).save(),
             new roleSchema({ name: RolesEnum.REGISTER, permissions: permissionAuth, description: 'Role created to use the system' }).save()
         ]);
-    } catch (error) {
-        console.error(error);
+        _fastify.log.info('Successfully created roles');
+    } catch (err) {
+        _fastify.log.error(err);
     }
 };
 

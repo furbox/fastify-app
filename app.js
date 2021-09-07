@@ -53,9 +53,9 @@ module.exports = async function (fastify, opts) {
     }
   });
 
-  await createModulesInit();
-  await createPermissionsInit();
-  await createRolesInit();
-  await createUserInit();
+  await createModulesInit(fastify);
+  await createPermissionsInit(fastify);
+  await createRolesInit(fastify);
+  await createUserInit(fastify);
   fastify.listen(5000);
 }

@@ -2,26 +2,6 @@ const Joi = require('joi');
 
 /**
  * @exports
- * @method validateId
- * @param { id }
- * @summary validate id
- * @returns
- */
-function validateId(id) {
-    return Joi.object({
-        id: Joi
-            .string()
-            .required(),
-    })
-        .validate({
-            id,
-        },
-            { allowUnknown: true });
-}
-
-
-/**
- * @exports
  * @method validateName
  * @param { name }
  * @summary validate name
@@ -64,7 +44,6 @@ function validateRole(name, description) {
 }
 
 module.exports = {
-    validateId,
     validateRole,
     validateName
 };

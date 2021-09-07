@@ -9,7 +9,8 @@ const { getRoleByName } = require('../role/role.ctrl');
 const RolesEnum = require('../role/role.enum');
 const roleSchema = require('../role/role.schema');
 const { send } = require('../../helpers/response');
-const { validateId, validateUserCreate, validatePagination } = require('./user.validation');
+const { validatePagination, validateId } = require('../../helpers/validations');
+const { validateUserCreate } = require('./user.validation');
 
 userCtrl.getUserById = async (_request, _reply) => {
     const id = _request.params.id;
@@ -212,7 +213,7 @@ const upUser = async (user, _request, _reply) => {
 }
 
 
-const createUserInit = async () => {
+const createUserInit = async (_fastify) => {
     try {
         const count = await userSchema.estimatedDocumentCount();
 
@@ -224,8 +225,9 @@ const createUserInit = async () => {
         const values = await Promise.all([
             new userSchema({ fullName: 'admin@admin.com', email: 'admin@admin.com', password: bcrypt.hashSync('Admin123', salt), role: admin._id, status: true }).save()
         ]);
+        _fastify.log.info('Successfully created users')
     } catch (error) {
-        console.error(error);
+        _fastify.log.error(err);
     }
 };
 

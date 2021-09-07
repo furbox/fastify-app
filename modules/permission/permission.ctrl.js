@@ -107,7 +107,7 @@ const getPermissionByModuleId = async (moduleId) => {
     return permissions
 }
 
-const createPermissionsInit = async () => {
+const createPermissionsInit = async (_fastify) => {
     try {
         const count = await permissionSchema.estimatedDocumentCount();
 
@@ -253,8 +253,9 @@ const createPermissionsInit = async () => {
                 module: user._id
             }).save(),
         ]);
+        _fastify.log.info('Successfully created permissions');
     } catch (error) {
-        console.error(error);
+        _fastify.log.error(err);
     }
 };
 

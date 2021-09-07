@@ -118,7 +118,7 @@ const getModuleById = async (id, _reply) => {
     }
 }
 
-const createModulesInit = async () => {
+const createModulesInit = async (_fastify) => {
     try {
         const count = await moduleSchema.estimatedDocumentCount();
 
@@ -131,8 +131,9 @@ const createModulesInit = async () => {
             new moduleSchema({ name: ModulesEnum.USERS.name, description: ModulesEnum.USERS.description }).save(),
             new moduleSchema({ name: ModulesEnum.MODULES.name, description: ModulesEnum.MODULES.description }).save()
         ]);
+        _fastify.log.info('Successfully created users')
     } catch (error) {
-        console.error(error);
+        _fastify.log.error(error);
     }
 };
 

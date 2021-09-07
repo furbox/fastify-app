@@ -2,25 +2,6 @@ const Joi = require('joi');
 
 /**
  * @exports
- * @method validateId
- * @param { id }
- * @summary validate id
- * @returns
- */
-function validateId(id) {
-    return Joi.object({
-        id: Joi
-            .string()
-            .required(),
-    })
-        .validate({
-            id,
-        },
-            { allowUnknown: true });
-}
-
-/**
- * @exports
  * @method validateCode
  * @param { code }
  * @summary validate code
@@ -112,7 +93,6 @@ function validateSignup(fullName, email, password) {
 }
 
 module.exports = {
-    validateId,
     validateSignup,
     validateSignin,
     validatePasswordChange,
