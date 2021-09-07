@@ -167,6 +167,7 @@ const createRolesInit = async (_fastify) => {
         const role = await getModuleByName(ModulesEnum.ROLES.name);
         const xmodule = await getModuleByName(ModulesEnum.MODULES.name);
         const user = await getModuleByName(ModulesEnum.USERS.name);
+        const profile = await getModuleByName(ModulesEnum.PROFILE.name);
 
         const permissionAuth = await getPermissionByModuleId(auth._id);
         const allPermissionAuth = permissionAuth.map(permauth => permauth._id);
@@ -183,12 +184,16 @@ const createRolesInit = async (_fastify) => {
         const permissionUser = await getPermissionByModuleId(user._id);
         const allPermissionUser = permissionUser.map(permuser => permuser._id);
 
+        const permissionProfile = await getPermissionByModuleId(profile._id);
+        const allPermissionProfile = permissionProfile.map(permpro => permpro._id);
+
         const allpermissions = [
             ...allPermissionPerm,
             ...allPermissionAuth,
             ...allPermissionRole,
             ...allPermissionXmod,
-            ...allPermissionUser
+            ...allPermissionUser,
+            ...allPermissionProfile
         ];
 
         await Promise.all([

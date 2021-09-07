@@ -119,6 +119,18 @@ const PermissionsEnum = {
             namekey: 'updateUser',
             description: 'This permission updated a roles'
         }
+    },
+    PROFILE: {
+        profileUpdate: {
+            name: 'UPDATED PROFILE',
+            namekey: 'profileUpdate',
+            description: 'This permission updated profile to user'
+        },
+        profilePasswordChange: {
+            name: 'UPDATED PASSWORD PROFILE',
+            namekey: 'profilePasswordChange',
+            description: 'This permission updated password profile to user'
+        }
     }
 };
 

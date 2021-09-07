@@ -144,6 +144,7 @@ const createPermissionsInit = async (_fastify) => {
         const role = await getModuleByName(ModulesEnum.ROLES.name);
         const xmodule = await getModuleByName(ModulesEnum.MODULES.name);
         const user = await getModuleByName(ModulesEnum.USERS.name);
+        const profile = await getModuleByName(ModulesEnum.PROFILE.name);
 
         const values = await Promise.all([
             new permissionSchema({
@@ -277,6 +278,18 @@ const createPermissionsInit = async (_fastify) => {
                 namekey: PermissionsEnum.USER.updateUser.namekey,
                 description: PermissionsEnum.USER.updateUser.description,
                 module: user._id
+            }).save(),
+            new permissionSchema({
+                name: PermissionsEnum.PROFILE.profileUpdate.name,
+                namekey: PermissionsEnum.PROFILE.profileUpdate.namekey,
+                description: PermissionsEnum.PROFILE.profileUpdate.description,
+                module: profile._id
+            }).save(),
+            new permissionSchema({
+                name: PermissionsEnum.PROFILE.profilePasswordChange.name,
+                namekey: PermissionsEnum.PROFILE.profilePasswordChange.namekey,
+                description: PermissionsEnum.PROFILE.profilePasswordChange.description,
+                module: profile._id
             }).save(),
         ]);
         _fastify.log.info('Successfully created permissions');

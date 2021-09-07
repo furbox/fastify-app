@@ -144,7 +144,8 @@ const createModulesInit = async (_fastify) => {
             new moduleSchema({ name: ModulesEnum.ROLES.name, description: ModulesEnum.ROLES.description }).save(),
             new moduleSchema({ name: ModulesEnum.PERMISSIONS.name, description: ModulesEnum.PERMISSIONS.description }).save(),
             new moduleSchema({ name: ModulesEnum.USERS.name, description: ModulesEnum.USERS.description }).save(),
-            new moduleSchema({ name: ModulesEnum.MODULES.name, description: ModulesEnum.MODULES.description }).save()
+            new moduleSchema({ name: ModulesEnum.MODULES.name, description: ModulesEnum.MODULES.description }).save(),
+            new moduleSchema({ name: ModulesEnum.PROFILE.name, description: ModulesEnum.PROFILE.description }).save()
         ]);
         _fastify.log.info('Successfully created modules')
     } catch (error) {

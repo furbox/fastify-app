@@ -19,6 +19,10 @@ const ModulesEnum = {
     MODULES: {
         name: 'MODULES',
         description: 'module to manage Modules'
+    },
+    PROFILE: {
+        name: 'PROFILE',
+        description: 'module to manage profiles'
     }
 };
 
