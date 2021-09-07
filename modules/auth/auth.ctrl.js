@@ -83,13 +83,13 @@ authCtrl.changePassword = async (_request, _reply) => {
 }
 
 authCtrl.verifyAccount = async (_request, _reply) => {
-    const body = _.pick(_request.body, ['email']);
     try {
-        const { error } = validateCode(body.code);
+        const code = _request.params.code;
+        const { error } = validateCode(code);
         if (error) {
             return send(_request, _reply, error.details, 401);
         }
-        const user = await getUserByCode(body.code, _request, _reply);
+        const user = await getUserByCode(code, _request, _reply);
         if (!user) return send(_request, _reply, 'User does not exist or this account is actived', 401);
         if (user.status) return send(_request, _reply, 'The account is already active', 401);
         user.activationcode = true;

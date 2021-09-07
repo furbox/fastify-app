@@ -145,7 +145,7 @@ const createModulesInit = async (_fastify) => {
             new moduleSchema({ name: ModulesEnum.USERS.name, description: ModulesEnum.USERS.description }).save(),
             new moduleSchema({ name: ModulesEnum.MODULES.name, description: ModulesEnum.MODULES.description }).save()
         ]);
-        _fastify.log.info('Successfully created users')
+        _fastify.log.info('Successfully created modules')
     } catch (error) {
         _fastify.log.error(error);
     }
