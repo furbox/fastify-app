@@ -5,100 +5,124 @@ const { isValidObjectId } = require('../../helpers');
 const { getModuleById, getModuleByName } = require('../module/module.ctrl');
 const ModulesEnum = require('../module/module.enum');
 const PermissionsEnum = require('./permission.enum');
+const { send } = require('../../helpers/response');
+const { validatePagination, validateId } = require('../../helpers/validations');
+const { validatePermissionCreate } = require('./permission.validation');
 
 permissionCtrl.getAllPermissions = async (_request, _reply) => {
+    const { limit = 5, page = 0, status = true } = _request.query;
+    const { error } = validatePagination(limit, page, status);
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
     try {
-        const AllPermissions = await permissionSchema.find({ status: true }).populate('module');
-        _reply.send({
-            result: AllPermissions
+        const [total, permissions] = await Promise.all([
+            permissionSchema.countDocuments({ status }),
+            permissionSchema.find({ status })
+                .skip(Number(page))
+                .limit(Number(limit))
+                .populate({
+                    'path': 'module',
+                    'select': 'name description'
+                })
+        ]);
+        return send(_request, _reply, 'ok', 200, {
+            total,
+            permissions
         });
-    } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
 permissionCtrl.getPermission = async (_request, _reply) => {
     try {
         const id = _request.params.id;
-        isValidObjectId(id, _request, _reply);
-        const permission = await permissionSchema.findOne({ _id: id, status: true }).populate('module');
-        if (!permission) {
-            return _reply.code(401).send({
-                msg: 'This permission dont exists'
-            });
+        const { error } = validateId(id);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
         }
-        _reply.send({
-            result: permission
+        isValidObjectId(id, _request, _reply);
+        const permission = await permissionSchema.findOne({ _id: id, status: true }).populate({
+            'path': 'module',
+            'select': 'name description'
         });
+        if (!permission) {
+            return send(_request, _reply, 'This permission dont exists', 401);
+        }
+        return send(_request, _reply, 'ok', 200, permission);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
 permissionCtrl.addPermission = async (_request, _reply) => {
-    const { name, namekey, description, module } = _request.body;
-    const existModule = await getModuleById(module, _reply);
-    if (!existModule) return _reply.code(401).send({ msg: 'This permission does not exists' });
-    const existPermission = await getPermissionByName(namekey, _reply);
-    if (existPermission) return _reply.code(401).send({ msg: 'This permission already exists' });
+    const body = _.pick(_request.body, ['name', 'namekey', 'description', 'module']);
+    const { error } = validatePermissionCreate(body.name, body.namekey, body.description, body.module);
+    if (error) {
+        return send(_request, _reply, error.details, 401);
+    }
+    const existModule = await getModuleById(body.module, _reply);
+    if (!existModule) return send(_request, _reply, 'This permission does not exists', 401);
+    const existPermission = await getPermissionByName(body.namekey, _request, _reply);
+    if (existPermission) return send(_request, _reply, 'This permission already exists', 401);
     try {
-        const permission = new permissionSchema({ name, description, namekey, module });
+        const permission = new permissionSchema(body);
         await permission.save();
-        _reply.code(201).send({
-            result: permission
-        });
+        return send(_request, _reply, 'ok', 201, permission);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
 permissionCtrl.updatePermission = async (_request, _reply) => {
     try {
         const id = _request.params.id;
+        const { error: errorid } = validateId(id);
+        if (errorid) {
+            return send(_request, _reply, error.details, 401);
+        }
         isValidObjectId(id, _request, _reply);
-        const permissionUpdate = await permissionSchema.findByIdAndUpdate(id, _request.body, {
-            new: true
-        });
-        _reply.send({
-            result: permissionUpdate
-        });
+        const body = _.pick(_request.body, ['name', 'namekey', 'description', 'module']);
+        const { error } = validatePermissionCreate(body.name, body.namekey, body.description, body.module);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
+        const permissionUpdate = await permissionSchema.findByIdAndUpdate(id, body, { new: true });
+        return send(_request, _reply, 'ok', 200, permissionUpdate);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
 permissionCtrl.deletePermission = async (_request, _reply) => {
     try {
         const id = _request.params.id;
+        const { error } = validateId(id);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
         await isValidObjectId(id, _request, _reply);
         const eliminaLogica = { status: false };
         const permissionDelete = await permissionSchema.findByIdAndUpdate(id, eliminaLogica, { new: true });
-        _reply.send({
-            result: permissionDelete
-        });
+        return send(_request, _reply, 'ok', 200, permissionDelete);
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 };
 
-const getPermissionByName = async (permissionNameKey, _reply) => {
+const getPermissionByName = async (permissionNameKey, _request, _reply) => {
     try {
         const permission = await permissionSchema.findOne({ namekey: permissionNameKey });
         return permission
     } catch (error) {
-        return _reply.code(500).send({
-            msg: 'Internal server error'
-        });
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
     }
 }
 

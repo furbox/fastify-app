@@ -80,7 +80,7 @@ roleCtrl.getRoleByName = async (_request, _reply) => {
 roleCtrl.addRole = async (_request, _reply) => {
     try {
         const body = _.pick(_request.body, ['name', 'description', 'permissions']);
-        const { error } = RoleValidation.validateRole(body.name, body.description);
+        const { error } = RoleValidation.validateRole(body.name, body.description, body.permissions);
         if (error) {
             return send(_request, _reply, error.details, 401);
         }
@@ -98,14 +98,19 @@ roleCtrl.addRole = async (_request, _reply) => {
 };
 
 roleCtrl.updateRole = async (_request, _reply) => {
-    const id = _request.params.id;
-    const { error } = validateId(id);
-    if (error) {
-        return send(_request, _reply, error.details, 401);
-    }
-    const body = _.pick(_request.body, ['name', 'description', 'permissions']);
     try {
+        const id = _request.params.id;
+        const { error: errorid } = validateId(id);
+        if (errorid) {
+            return send(_request, _reply, error.details, 401);
+        }
         isValidObjectId(id, _request, _reply);
+        const body = _.pick(_request.body, ['name', 'description', 'permissions']);
+        const { error } = RoleValidation.validateRole(body.name, body.description, body.permissions);
+        if (error) {
+            return send(_request, _reply, error.details, 401);
+        }
+        body.name.toUpperCase();
         const roleUpdate = await roleSchema.findByIdAndUpdate(id, body, {
             new: true
         });

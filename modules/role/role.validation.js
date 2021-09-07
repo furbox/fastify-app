@@ -34,7 +34,10 @@ function validateRole(name, description) {
             .required(),
         description: Joi
             .string()
-            .required()
+            .required(),
+        permissions: [
+            Joi.string()
+        ]
     })
         .validate({
             name,
