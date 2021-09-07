@@ -1,6 +1,7 @@
 'use strict';
 
 const moduleCtrl = {};
+const _ = require('underscore');
 const moduleSchema = require('./module.schema');
 const { isValidObjectId } = require('../../helpers');
 const ModulesEnum = require('./module.enum');

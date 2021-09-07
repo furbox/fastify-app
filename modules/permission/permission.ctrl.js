@@ -1,5 +1,6 @@
 'use strict';
 const permissionCtrl = {};
+const _ = require('underscore');
 const permissionSchema = require('./permission.schema');
 const { isValidObjectId } = require('../../helpers');
 const { getModuleById, getModuleByName } = require('../module/module.ctrl');
@@ -60,6 +61,7 @@ permissionCtrl.getPermission = async (_request, _reply) => {
 
 permissionCtrl.addPermission = async (_request, _reply) => {
     const body = _.pick(_request.body, ['name', 'namekey', 'description', 'module']);
+    console.log(body)
     const { error } = validatePermissionCreate(body.name, body.namekey, body.description, body.module);
     if (error) {
         return send(_request, _reply, error.details, 401);
