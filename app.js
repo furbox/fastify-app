@@ -57,5 +57,5 @@ module.exports = async function (fastify, opts) {
   await createPermissionsInit(fastify);
   await createRolesInit(fastify);
   await createUserInit(fastify);
-  fastify.listen(5000);
+  fastify.listen(process.env.PORT);
 }
