@@ -10,7 +10,7 @@ const RolesEnum = require('../role/role.enum');
 const roleSchema = require('../role/role.schema');
 const { send } = require('../../helpers/response');
 const { validatePagination, validateId } = require('../../helpers/validations');
-const { validateUserCreate } = require('./user.validation');
+const { validateUserCreate, validateUserUpdate } = require('./user.validation');
 
 userCtrl.getUserById = async (_request, _reply) => {
     const id = _request.params.id;
@@ -84,8 +84,8 @@ userCtrl.addUser = async (_request, _reply) => {
 userCtrl.updateUser = async (_request, _reply) => {
     const id = _request.params.id;
     await isValidObjectId(id, _request, _reply);
-    const body = _.pick(_request.body, ['fullName', 'email', 'password', 'role', 'status']);
-    const { error } = validateUserCreate(body.fullName, body.email, body.password, body.role, body.status);
+    const body = _.pick(_request.body, ['fullName', 'email', 'role', 'status']);
+    const { error } = validateUserUpdate(body.fullName, body.email, body.role, body.status);
     if (error) {
         return send(_request, _reply, error.details, 401);
     }

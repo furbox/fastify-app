@@ -35,6 +35,29 @@ function validateUserCreate(fullName, email, password, role, status) {
             { allowUnknown: true });
 }
 
+function validateUserUpdate(fullName, email, role, status) {
+    return Joi.object({
+        fullName: Joi
+            .string()
+            .required(),
+        email: Joi
+            .string()
+            .email()
+            .required(),
+        role: Joi
+            .string()
+            .required(),
+        status: Joi
+            .boolean()
+            .required(),
+    })
+        .validate({
+            fullName, email, role, status,
+        },
+            { allowUnknown: true });
+}
+
 module.exports = {
-    validateUserCreate
+    validateUserCreate,
+    validateUserUpdate
 };

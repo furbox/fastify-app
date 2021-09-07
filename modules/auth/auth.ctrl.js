@@ -105,7 +105,6 @@ authCtrl.verifyAccount = async (_request, _reply) => {
 authCtrl.refreshToken = async (_request, _reply) => {
     const { authorization } = _request.headers;
     if (!authorization) {
-        _request.log.error(authorization);
         return send(_request, _reply, 'missing authorization in headers', 401);
     }
     //obtener el token actual
@@ -116,10 +115,10 @@ authCtrl.refreshToken = async (_request, _reply) => {
     const data = await _request.jwtVerify();
     try {
         //const tokenDB = await authSchema.findOne({ user: data.user.user_id });
-        const userDB = await getUserById(data.user.user_id, _reply);
-        const token = await generarToken(userDB, _reply);
+        const userDB = await getUserById(data.user.user_id, _request, _reply);
+        const token = await generarToken(userDB, _request, _reply);
 
-        await addTokenUser(token, userDB._id, _reply);
+        await addTokenUser(token, userDB._id, _request, _reply);
         return send(_request, _reply, 'ok', 201, {
             token: token,
             expiresIn: process.env.CADUCIDAD_TOKEN
