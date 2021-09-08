@@ -21,7 +21,7 @@ try {
     useUnifiedTopology: true,
   });
 } catch (error) {
-  console.error('Mongo Connection error: ', error);
+  fastify.log.error(error);
 }
 
 module.exports = async function (fastify, opts) {

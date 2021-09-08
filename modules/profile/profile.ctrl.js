@@ -36,7 +36,6 @@ profileCtrl.profilePasswordChange = async (_request, _reply) => {
         if(!user){
             return send(_request, _reply, 'user does not found', 401);
         }
-        console.log(user);
         if (!bcrypt.compareSync(body.oldpass, user.password)) {
             return send(_request, _reply, 'Invalid data', 401);
         }
