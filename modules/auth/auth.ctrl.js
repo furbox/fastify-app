@@ -149,6 +149,19 @@ const addTokenUser = async (token, userid, _request, _reply) => {
     }
 }
 
+const getTokenByUserID = async (userID, _request, _reply) => {
+    try {
+        const data = await authSchema.findOne({ user:userID });
+        if (!data) {
+            return false;
+        }
+        return data
+    } catch (err) {
+        _request.log.error(err);
+        return send(_request, _reply, 'Internal server error', 500);
+    }
+}
+
 const generarToken = async (user, _request, _reply) => {
     try {
         const payload = {
@@ -171,4 +184,4 @@ const generarToken = async (user, _request, _reply) => {
     }
 }
 
-module.exports = authCtrl;
+module.exports = { authCtrl, getTokenByUserID };

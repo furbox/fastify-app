@@ -1,6 +1,6 @@
 'use strict';
 
-const authCtrl = require("../../modules/auth/auth.ctrl");
+const { authCtrl } = require("../../modules/auth/auth.ctrl");
 const PermissionsEnum = require("../../modules/permission/permission.enum");
 
 

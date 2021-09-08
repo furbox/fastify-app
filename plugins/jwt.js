@@ -1,8 +1,10 @@
 'use strict'
 
-const fp = require('fastify-plugin')
-const { getRoleByName } = require('../modules/role/role.ctrl')
-const { getUserById } = require('../modules/user/user.ctrl')
+const fp = require('fastify-plugin');
+const { getTokenByUserID } = require('../modules/auth/auth.ctrl');
+const { getRoleByName } = require('../modules/role/role.ctrl');
+const { getUserById } = require('../modules/user/user.ctrl');
+const { send } = require('../helpers/response');
 
 /**
  * This plugins adds some utilities to handle http errors
@@ -26,9 +28,19 @@ module.exports = fp(async function (fastify, opts) {
   })
 
   fastify.decorate("authenticate", async function (request, reply) {
+    const { authorization } = request.headers;
+    if (!authorization) {
+      return send(request, reply, 'missing authorization in headers', 401);
+    }
+    //obtener el token actual
+    const actualToken = authorization.split(' ')[1];
     try {
       const info = await request.jwtVerify();
-      await getUserById(info.user.user_id, request, reply);
+      const user = await getUserById(info.user.user_id, request, reply);
+      const tokenDB = await getTokenByUserID(user._id);
+      if (tokenDB.token !== actualToken || user._id.toString() !== info.user.user_id) {
+        return send(request, reply, 'missing authorization', 401);
+      }
       await request.jwtVerify()
     } catch (err) {
       reply.send(err)
