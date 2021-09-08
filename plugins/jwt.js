@@ -28,7 +28,7 @@ module.exports = fp(async function (fastify, opts) {
   fastify.decorate("authenticate", async function (request, reply) {
     try {
       const info = await request.jwtVerify();
-      await getUserById(info.user.user_id, reply);
+      await getUserById(info.user.user_id, request, reply);
       await request.jwtVerify()
     } catch (err) {
       reply.send(err)
@@ -38,7 +38,7 @@ module.exports = fp(async function (fastify, opts) {
   fastify.decorate("authPermission", (perms) => async function (request, reply) {
     try {
       const dataUser = await request.jwtVerify();
-      const role = await getRoleByName(dataUser.user.user_role);
+      const role = await getRoleByName(dataUser.user.user_role, request, reply);
       const { permissions } = role;
       const authorize = permissions.find(perm => perm.namekey === perms);
       if (!authorize) {
