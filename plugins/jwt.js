@@ -43,7 +43,7 @@ module.exports = fp(async function (fastify, opts) {
       }
       await request.jwtVerify()
     } catch (err) {
-      reply.send(err)
+      reply.send(err);
     }
   })
 

@@ -182,7 +182,7 @@ const createUser = async (addUser, _request, _reply) => {
         } else {
             role = addUser.role;
         }
-        const hash = await crypto.randomBytes(32);
+        const hash = crypto.randomBytes(32);
         const salt = bcrypt.genSaltSync();
         const newUser = {
             fullName: addUser.fullName,
