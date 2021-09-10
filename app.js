@@ -4,17 +4,11 @@ const path = require('path');
 const AutoLoad = require('fastify-autoload');
 const mongoose = require('mongoose');
 const { createRolesInit } = require('./modules/role/role.ctrl');
-const Fastify = require('fastify');
 const { createModulesInit } = require('./modules/module/module.ctrl');
 const { createPermissionsInit } = require('./modules/permission/permission.ctrl');
 const { createUserInit } = require('./modules/user/user.ctrl');
 const { format } = require('./helpers/response');
 
-const fastify = Fastify({
-  logger: {
-    pinoPretty: true
-  }
-});
 try {
   mongoose.connect(process.env.MONGODB_CNN, {
     useNewUrlParser: true,
