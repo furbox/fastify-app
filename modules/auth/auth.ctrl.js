@@ -5,6 +5,7 @@ const authSchema = require('./auth.schema');
 const { createUser, getUserByEmail, upUser, getUserByCode, getUserById } = require('../user/user.ctrl');
 const { validateSignin, validateSignup, validatePasswordChange, validateCode } = require('./auth.validation');
 const { send } = require('../../helpers/response');
+const { sendMail } = require('../../helpers/sendgrid');
 
 authCtrl.signin = async (_request, _reply) => {
     const body = _.pick(_request.body, ['email', 'password']);
@@ -39,12 +40,12 @@ authCtrl.signup = async (_request, _reply) => {
         if (userExist) return send(_request, _reply, 'This user already exists', 401);
         const newUser = await createUser(user, _request, _reply);
 
-        //TODO: envios de emails
-        // sendMail({
-        //     to: newUser.email,
-        //     subject: 'Verificación de Email',
-        //     html: '<h1>Verifica tu email:</h1><br><a href="http://' + req.get('Host') + '/api/v1/auth/verify-account/' + user.codevalidate + '">Link</a>'
-        // });
+        sendMail({
+            to: newUser.email,
+            subject: 'Email Verification',
+            html: '<h1>Verifica tu email:</h1><br><a href="http://' + _request.hostname + '/api/v1/auth/validation/' + newUser.codevalidate + '">Link</a>'
+        });
+
         return send(_request, _reply, 'Email sent with a code for verification.', 201);
     } catch (err) {
         _request.log.error(err);
@@ -70,11 +71,12 @@ authCtrl.changePassword = async (_request, _reply) => {
         user.password = newEncryptPass;
         await upUser(user);
 
-        // sendMail({
-        //     to: user.email,
-        //     subject: 'Verificación de Email',
-        //     html: '<p>Nueva Contraseña: ' + newPass + '</p><br><p>Recomendamos Cambiarla.</p>'
-        // });
+        sendMail({
+            to: user.email,
+            subject: 'Verificación de Email',
+            html: '<p>Nueva Contraseña: ' + newPass + '</p><br><p>Recomendamos Cambiarla.</p>'
+        });
+        
         return send(_request, _reply, 'We have sent your new password to your email', 201);
     } catch (err) {
         _request.log.error(err);
@@ -151,7 +153,7 @@ const addTokenUser = async (token, userid, _request, _reply) => {
 
 const getTokenByUserID = async (userID, _request, _reply) => {
     try {
-        const data = await authSchema.findOne({ user:userID });
+        const data = await authSchema.findOne({ user: userID });
         if (!data) {
             return false;
         }
