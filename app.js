@@ -8,7 +8,7 @@ const { createModulesInit } = require('./modules/module/module.ctrl');
 const { createPermissionsInit } = require('./modules/permission/permission.ctrl');
 const { createUserInit } = require('./modules/user/user.ctrl');
 const { format } = require('./helpers/response');
-
+const fastify = require('fastify')({ logger: true, pluginTimeout: 20000 })
 try {
   mongoose.connect(process.env.MONGODB_CNN, {
     useNewUrlParser: true,
