@@ -26,30 +26,34 @@ module.exports = async function (fastify, opts) {
   // This loads all plugins defined in plugins
   // those should be support plugins that are reused
   // through your application
-  fastify.register(AutoLoad, {
-    dir: path.join(__dirname, 'plugins'),
-    options: Object.assign({}, opts)
-  })
+  try {
+    fastify.register(AutoLoad, {
+      dir: path.join(__dirname, 'plugins'),
+      options: Object.assign({}, opts)
+    })
 
-  // This loads all plugins defined in routes
-  // define your routes in one of these
-  fastify.register(AutoLoad, {
-    dir: path.join(__dirname, 'routes'),
-    options: Object.assign({ prefix: '/api/v1' }, opts)
-  })
+    // This loads all plugins defined in routes
+    // define your routes in one of these
+    fastify.register(AutoLoad, {
+      dir: path.join(__dirname, 'routes'),
+      options: Object.assign({ prefix: '/api/v1' }, opts)
+    })
 
-  fastify.setErrorHandler((error, request, reply) => {
-    if (error.validation && error.validation.length > 0) {
-      const path = error.validation[0].dataPath;
-      const field = path.charAt(1).toUpperCase() + path.slice(2);
-      const message = `${field} ${error.validation[0].message}`;
-      reply.status(422).send(format(request, reply, message));
-    }
-  });
+    fastify.setErrorHandler((error, request, reply) => {
+      if (error.validation && error.validation.length > 0) {
+        const path = error.validation[0].dataPath;
+        const field = path.charAt(1).toUpperCase() + path.slice(2);
+        const message = `${field} ${error.validation[0].message}`;
+        reply.status(422).send(format(request, reply, message));
+      }
+    });
 
-  await createModulesInit(fastify);
-  await createPermissionsInit(fastify);
-  await createRolesInit(fastify);
-  await createUserInit(fastify);
-  fastify.listen(process.env.PORT);
+    await createModulesInit(fastify);
+    await createPermissionsInit(fastify);
+    await createRolesInit(fastify);
+    await createUserInit(fastify);
+    fastify.listen(process.env.PORT);
+  } catch (error) {
+    fastify.log.error(error);
+  }
 }
