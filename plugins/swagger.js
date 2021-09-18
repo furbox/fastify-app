@@ -7,7 +7,7 @@ const fp = require('fastify-plugin')
  *
  * @see https://github.com/fastify/fastify-sensible
  */
-module.exports = fp(async function (fastify, opts) {
+module.exports = fp(async function (fastify, opts, done) {
 
     fastify.register(require('fastify-swagger'), {
         exposeRoute: true,
@@ -15,7 +15,9 @@ module.exports = fp(async function (fastify, opts) {
         swagger: {
             info: { title: 'fastify-api' },
         },
-    })
+    });
+
+    done();
 })
 
 

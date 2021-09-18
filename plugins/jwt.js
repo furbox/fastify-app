@@ -11,7 +11,7 @@ const { send } = require('../helpers/response');
  *
  * @see https://github.com/fastify/fastify-sensible
  */
-module.exports = fp(async function (fastify, opts) {
+module.exports = fp(async function (fastify, opts, done) {
 
   const myCustomMessages = {
     badRequestErrorMessage: 'Format is Authorization: Bearer [token]',
@@ -66,4 +66,6 @@ module.exports = fp(async function (fastify, opts) {
       reply.send(err)
     }
   })
+
+  done();
 })
